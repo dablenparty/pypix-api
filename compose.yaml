@@ -1,0 +1,14 @@
+﻿services:
+  postgres:
+    env_file: .env
+    image: pgvector/pgvector:pg16
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+
+volumes:
+  pgdata: { }
