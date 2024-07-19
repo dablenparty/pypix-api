@@ -2,6 +2,10 @@
 from fastapi.middleware.cors import CORSMiddleware
 from tusserver.tus import create_api_router
 
+from db import init_db
+
+init_db()
+
 app = FastAPI()
 
 app.add_middleware(
