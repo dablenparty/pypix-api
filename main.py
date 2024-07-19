@@ -12,10 +12,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# TODO: on_upload_complete handler for AI processing
 app.include_router(
     create_api_router(
         files_dir="./images",
-    )
+        location="http://127.0.0.1:8000/images/upload",
+    ),
+    prefix="/images/upload",
 )
 
 
