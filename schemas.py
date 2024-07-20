@@ -1,22 +1,16 @@
-﻿from pydantic import BaseModel
+﻿import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
 
 
-class ImageBase(BaseModel):
-    id: str
+class Image(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
     file_name: str
-    tags: list
-
-
-class ImageCreate(ImageBase):
-    pass
-
-
-class Image(ImageBase):
-    # TODO: exif typing
     exif_data: dict | None
-    created_at: str
+    created_at: datetime
     caption: str | None
     embeddings: list | None
-
-    class Config:
-        orm_mode = True
+    tags: list[str] = list()

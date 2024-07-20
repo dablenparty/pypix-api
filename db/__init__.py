@@ -1,5 +1,8 @@
-﻿from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+﻿import contextlib
+from typing import AsyncIterator, Any, Annotated
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncConnection, AsyncSession
 from os import getenv
 
 from dotenv import load_dotenv, find_dotenv
@@ -8,21 +11,54 @@ from .models import DbBaseModel
 
 load_dotenv(find_dotenv())
 
-SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://postgres:{getenv("POSTGRESQL_PASSWORD")}@localhost:5432/postgres"
+SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://postgres:{getenv("POSTGRESQL_PASSWORD")}@localhost:5432/postgres"
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# from: https://medium.com/@tclaitken/setting-up-a-fastapi-app-with-async-sqlalchemy-2-0-pydantic-v2-e6c540be4308
+class DatabaseSessionManager:
+    def __init__(self, host: str, engine_kwargs: dict[str, Any] = dict()):
+        self._engine = create_async_engine(host, **engine_kwargs)
+        self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
+
+    async def close(self):
+        if self._engine is None:
+            raise Exception("DatabaseSessionManager is not initialized")
+        await self._engine.dispose()
+
+        self._engine = None
+        self._sessionmaker = None
+
+    @contextlib.asynccontextmanager
+    async def connect(self) -> AsyncIterator[AsyncConnection]:
+        if self._engine is None:
+            raise Exception("DatabaseSessionManager is not initialized")
+
+        async with self._engine.begin() as connection:
+            try:
+                yield connection
+            except Exception:
+                await connection.rollback()
+                raise
+
+    @contextlib.asynccontextmanager
+    async def session(self) -> AsyncIterator[AsyncSession]:
+        if self._sessionmaker is None:
+            raise Exception("DatabaseSessionManager is not initialized")
+
+        session = self._sessionmaker()
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
-def init_db():
-    from .models.image import Image
-    # models must be imported to be created, thanks to python's import system
-    DbBaseModel.metadata.create_all(bind=engine)
+sessionmanager = DatabaseSessionManager(SQLALCHEMY_DATABASE_URL)
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db_session():
+    async with sessionmanager.session() as session:
+        yield session
+
+DbSessionDependency = Annotated[AsyncSession, Depends(get_db_session)]

@@ -1,12 +1,31 @@
-﻿from fastapi import FastAPI
+﻿from contextlib import asynccontextmanager
+import logging
+import sys
+
+import uvicorn
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tusserver.tus import create_api_router
 
-from db import init_db
+from db import sessionmanager
 
-init_db()
+# TODO: settings class
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Function that handles startup and shutdown events.
+    To understand more, read https://fastapi.tiangolo.com/advanced/events/
+    """
+    yield
+    if sessionmanager._engine is not None:
+        # Close the DB connection
+        await sessionmanager.close()
+
+
+app = FastAPI(lifespan=lifespan, title="pypix", docs_url="/api/docs")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +50,5 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
