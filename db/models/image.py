@@ -17,7 +17,7 @@ class Image(DbBaseModel):
     created_at = Column(DateTime, default=datetime.now(UTC))
     caption = Column(Text, nullable=True)
     embeddings = mapped_column(Vector(512), nullable=True)
-    tags = Column(ARRAY(String), default=list(), nullable=False)
+    tags = Column(ARRAY(Text), default=list(), nullable=False)
 
 
 Index("idx_images_tags", Image.tags, postgresql_using="gin")
