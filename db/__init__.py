@@ -15,7 +15,9 @@ SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://postgres:{getenv("POSTGRESQL_PA
 
 # from: https://medium.com/@tclaitken/setting-up-a-fastapi-app-with-async-sqlalchemy-2-0-pydantic-v2-e6c540be4308
 class DatabaseSessionManager:
-    def __init__(self, host: str, engine_kwargs: dict[str, Any] = dict()):
+    def __init__(self, host: str, engine_kwargs: dict[str, Any] = None):
+        if engine_kwargs is None:
+            engine_kwargs = dict()
         self._engine = create_async_engine(host, **engine_kwargs)
         self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
 

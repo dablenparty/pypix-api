@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tusserver.tus import create_api_router
 
+from api.routers.images import images_router
 from db import sessionmanager
 
 # TODO: settings class
@@ -43,6 +44,8 @@ app.include_router(
     ),
     prefix="/images/upload",
 )
+
+app.include_router(images_router)
 
 
 @app.get("/")

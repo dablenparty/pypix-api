@@ -10,7 +10,7 @@ Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/images/upload
+GET http://127.0.0.1:8000/api/v1/images/6e44f54b-3241-4aa1-84f5-4b32419aa153
 Accept: application/json
 
 ###
