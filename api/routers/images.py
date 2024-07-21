@@ -15,6 +15,7 @@ images_router = APIRouter(
 
 @images_router.get("/{image_id}")
 def get_image(image_id: uuid.UUID, db_session: DbSessionDependency):
+    # TODO: copy this example: https://stackoverflow.com/a/67497103
     image = db_session.scalars(select(Image).where(Image.id == image_id)).first()
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
