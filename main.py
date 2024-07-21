@@ -1,7 +1,7 @@
 ﻿import asyncio
-from contextlib import asynccontextmanager
 import logging
 import sys
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
@@ -41,8 +41,8 @@ app.add_middleware(
 app.include_router(
     create_api_router(
         files_dir="./images",
-        prefix="/images/upload",
     ),
+    prefix="/images/upload",
 )
 
 app.include_router(images_router)
