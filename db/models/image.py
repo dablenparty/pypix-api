@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 from typing import Optional
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, Uuid, String, DateTime, Text, Index
+from sqlalchemy import String, Text, Index
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import mapped_column, Mapped
 
