@@ -1,4 +1,6 @@
-﻿import contextlib
+﻿import asyncio
+import contextlib
+import logging
 from typing import AsyncIterator, Any, Annotated
 
 from fastapi import Depends
@@ -13,6 +15,7 @@ load_dotenv(find_dotenv())
 
 SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://postgres:{getenv("POSTGRESQL_PASSWORD")}@localhost:5432/postgres"
 
+
 # from: https://medium.com/@tclaitken/setting-up-a-fastapi-app-with-async-sqlalchemy-2-0-pydantic-v2-e6c540be4308
 class DatabaseSessionManager:
     def __init__(self, host: str, engine_kwargs: dict[str, Any] = None):
@@ -20,6 +23,12 @@ class DatabaseSessionManager:
             engine_kwargs = dict()
         self._engine = create_async_engine(host, **engine_kwargs)
         self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
+
+    async def init(self):
+        if self._engine is None:
+            raise Exception("DatabaseSessionManager is not initialized")
+        async with self._engine.begin() as connection:
+            await connection.run_sync(DbBaseModel.metadata.create_all)
 
     async def close(self):
         if self._engine is None:

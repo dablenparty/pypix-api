@@ -1,4 +1,5 @@
-﻿from contextlib import asynccontextmanager
+﻿import asyncio
+from contextlib import asynccontextmanager
 import logging
 import sys
 
@@ -53,5 +54,12 @@ async def root():
     return {"message": "Hello World"}
 
 
+async def main():
+    logging.info("Starting pypix server")
+    await sessionmanager.init()
+    logging.info("Database initialized")
+    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000, loop="asyncio")
+
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
+    asyncio.run(main())
