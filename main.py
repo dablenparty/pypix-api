@@ -1,11 +1,11 @@
-﻿import asyncio
-import logging
+﻿import logging
 import sys
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 from tusserver.tus import create_api_router
 
 from api.routers.images import images_router
@@ -24,10 +24,12 @@ async def lifespan(app: FastAPI):
     yield
     if sessionmanager._engine is not None:
         # Close the DB connection
-        await sessionmanager.close()
+        sessionmanager.close()
 
 
 app = FastAPI(lifespan=lifespan, title="pypix", docs_url="/api/docs")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -49,16 +51,16 @@ app.include_router(images_router)
 
 
 @app.get("/")
-async def root():
+def root():
     return {"message": "Hello World"}
 
 
-async def main():
+def main():
     logging.info("Starting pypix server")
-    await sessionmanager.init()
+    sessionmanager.init()
     logging.info("Database initialized")
-    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000, loop="asyncio")
+    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

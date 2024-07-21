@@ -1,19 +1,18 @@
-﻿import asyncio
-import contextlib
-import logging
-from typing import AsyncIterator, Any, Annotated
-
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncConnection, AsyncSession
+﻿import contextlib
+from collections.abc import Iterator
 from os import getenv
+from typing import Any, Annotated
 
 from dotenv import load_dotenv, find_dotenv
+from fastapi import Depends
+from sqlalchemy import create_engine, Connection
+from sqlalchemy.orm import sessionmaker, Session
 
 from .models import DbBaseModel
 
 load_dotenv(find_dotenv())
 
-SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://postgres:{getenv("POSTGRESQL_PASSWORD")}@localhost:5432/postgres"
+SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://postgres:{getenv("POSTGRESQL_PASSWORD")}@localhost:5432/postgres"
 
 
 # from: https://medium.com/@tclaitken/setting-up-a-fastapi-app-with-async-sqlalchemy-2-0-pydantic-v2-e6c540be4308
@@ -21,37 +20,37 @@ class DatabaseSessionManager:
     def __init__(self, host: str, engine_kwargs: dict[str, Any] = None):
         if engine_kwargs is None:
             engine_kwargs = dict()
-        self._engine = create_async_engine(host, **engine_kwargs)
-        self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
+        self._engine = create_engine(host, **engine_kwargs)
+        self._sessionmaker = sessionmaker(autocommit=False, bind=self._engine)
 
-    async def init(self):
+    def init(self):
         if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
-        async with self._engine.begin() as connection:
-            await connection.run_sync(DbBaseModel.metadata.create_all)
+        with self._engine.begin() as connection:
+            DbBaseModel.metadata.create_all(connection)
 
-    async def close(self):
+    def close(self):
         if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
-        await self._engine.dispose()
+        self._engine.dispose()
 
         self._engine = None
         self._sessionmaker = None
 
-    @contextlib.asynccontextmanager
-    async def connect(self) -> AsyncIterator[AsyncConnection]:
+    @contextlib.contextmanager
+    def connect(self) -> Iterator[Connection]:
         if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
 
-        async with self._engine.begin() as connection:
+        with self._engine.begin() as connection:
             try:
                 yield connection
             except Exception:
-                await connection.rollback()
+                connection.rollback()
                 raise
 
-    @contextlib.asynccontextmanager
-    async def session(self) -> AsyncIterator[AsyncSession]:
+    @contextlib.contextmanager
+    def session(self) -> Iterator[Session]:
         if self._sessionmaker is None:
             raise Exception("DatabaseSessionManager is not initialized")
 
@@ -59,17 +58,18 @@ class DatabaseSessionManager:
         try:
             yield session
         except Exception:
-            await session.rollback()
+            session.rollback()
             raise
         finally:
-            await session.close()
+            session.close()
 
 
 sessionmanager = DatabaseSessionManager(SQLALCHEMY_DATABASE_URL)
 
 
-async def get_db_session():
-    async with sessionmanager.session() as session:
+def get_db_session():
+    with sessionmanager.session() as session:
         yield session
 
-DbSessionDependency = Annotated[AsyncSession, Depends(get_db_session)]
+
+DbSessionDependency = Annotated[Session, Depends(get_db_session)]

@@ -14,8 +14,8 @@ images_router = APIRouter(
 
 
 @images_router.get("/{image_id}")
-async def get_image(image_id: uuid.UUID, db_session: DbSessionDependency):
-    image = (await db_session.scalars(select(Image).where(Image.id == image_id))).first()
+def get_image(image_id: uuid.UUID, db_session: DbSessionDependency):
+    image = db_session.scalars(select(Image).where(Image.id == image_id)).first()
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
     return image
