@@ -3,15 +3,14 @@ import sys
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import insert
 from starlette.staticfiles import StaticFiles
 from tusserver.tus import create_api_router
 
 from api.routers.images import images_router
 from db import sessionmanager
-from db.models import DbImage
+from tus_utils import tus_naming_function, FILES_DIR
 
 # TODO: settings class
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -41,23 +40,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-def tus_naming_function(_: Request, metadata: dict[str, str]) -> str:
-    if not metadata or "filename" not in metadata:
-        raise ValueError("metadata.filename is required")
-    file_name = metadata["filename"]
-    with sessionmanager.session() as session:
-        image_id = session.scalars(insert(DbImage).returning(DbImage.id), [{"file_name": file_name}]).one()
-        # force commit
-        session.commit()
-        session.flush()
-    return str(image_id)
-
-
 # TODO: on_upload_complete handler for AI processing
 app.include_router(
     create_api_router(
-        files_dir="./images",
+        files_dir=FILES_DIR,
+        location="http://localhost:8000/images/upload",
         naming_function=tus_naming_function,
     ),
     prefix="/images/upload",
