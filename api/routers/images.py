@@ -1,10 +1,8 @@
 ﻿import uuid
 
-from fastapi import APIRouter, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, Response
 
-from db import DbSessionDependency
-from db.models import DbImage
+from tus_utils import get_image_path, get_image_metadata
 
 images_router = APIRouter(
     prefix="/api/v1/images",
@@ -13,10 +11,11 @@ images_router = APIRouter(
 )
 
 
-@images_router.get("/{image_id}")
-def get_image(image_id: uuid.UUID, db_session: DbSessionDependency):
-    # TODO: copy this example: https://stackoverflow.com/a/67497103
-    image = db_session.scalars(select(DbImage).where(DbImage.id == image_id)).first()
-    if not image:
-        raise HTTPException(status_code=404, detail="Image not found")
-    return image
+@images_router.get("/{image_id}", responses={200: {"image": {}}}, response_class=Response)
+def get_image(image_id: uuid.UUID):
+    metadata = get_image_metadata(image_id)
+    media_type = metadata.metadata.get("filetype", "image/jpeg")
+    image_path = get_image_path(image_id)
+    with image_path.open("rb") as f:
+        image_bytes = f.read()
+    return Response(content=image_bytes, media_type=media_type)
