@@ -1,8 +1,11 @@
 ﻿import uuid
 
 from fastapi import APIRouter, Response, HTTPException
+from sqlalchemy import select
 from starlette import status
 
+from db import DbSessionDependency
+from db.models import ImageModel
 from tus_utils import get_image_path, get_image_metadata
 
 images_router = APIRouter(
@@ -23,5 +26,13 @@ def get_image(image_id: uuid.UUID):
     with image_path.open("rb") as f:
         image_bytes = f.read()
     return Response(content=image_bytes, media_type=media_type)
+
+
+@images_router.get("/{image_id}/data", response_model=ImageModel, status_code=status.HTTP_200_OK)
+def get_image_data(image_id: uuid.UUID, db_session: DbSessionDependency):
+    image = db_session.scalars(select(ImageModel).where(ImageModel.id == image_id)).one_or_none()
+    if image is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found in database")
+    return image
 
 # TODO: search by embeddings

@@ -7,7 +7,7 @@ from starlette.requests import Request
 from tusserver.metadata import FileMetadata as TusFileMetadata
 
 from db import sessionmanager
-from db.models import DbImage
+from db.models import ImageModel
 
 
 FILES_DIR = "./images"
@@ -18,7 +18,7 @@ def tus_naming_function(_: Request, metadata: dict[str, str]) -> str:
         raise ValueError("metadata.filename is required")
     file_name = metadata["filename"]
     with sessionmanager.session() as session:
-        image_id = session.scalars(insert(DbImage).returning(DbImage.id), [{"file_name": file_name}]).one()
+        image_id = session.scalars(insert(ImageModel).returning(ImageModel.id), [{"file_name": file_name}]).one()
         # force commit
         session.commit()
         session.flush()

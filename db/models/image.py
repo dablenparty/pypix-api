@@ -10,16 +10,16 @@ from sqlalchemy.orm import mapped_column, Mapped
 from . import DbBaseModel
 
 
-class DbImage(DbBaseModel):
+class ImageModel(DbBaseModel):
     __tablename__ = "images"
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4, init=False)
     file_name: Mapped[str] = mapped_column(String(255))
     exif_data: Mapped[Optional[dict]] = mapped_column(JSONB)
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
     caption: Mapped[Optional[str]] = mapped_column(Text)
     embeddings: Mapped[Optional[list]] = mapped_column(Vector(512), index=True)
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
     tags: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
 
 
-Index("idx_images_tags", DbImage.tags, postgresql_using="gin")
+Index("idx_images_tags", ImageModel.tags, postgresql_using="gin")

@@ -1,7 +1,10 @@
-﻿from sqlalchemy.orm import declarative_base
+﻿from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass
 
-DbBaseModel = declarative_base()
-metadata = DbBaseModel.metadata
 
-# these MUST go below the declarative_base() call
-from .image import DbImage
+class DbBaseModel(MappedAsDataclass, DeclarativeBase):
+    """Base class for all database models"""
+    pass
+
+
+# these MUST go below the class definition
+from .image import ImageModel

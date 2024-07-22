@@ -30,6 +30,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="pypix", docs_url="/api/docs")
 
+# TODO: remove in production
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
@@ -62,7 +63,8 @@ def main():
     logging.info("Starting pypix server")
     sessionmanager.init()
     logging.info("Database initialized")
-    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
+    # reload breaks the static upload form
+    uvicorn.run("main:app", host="127.0.0.1", reload=False, port=8000)
 
 
 if __name__ == "__main__":
