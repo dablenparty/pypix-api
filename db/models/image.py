@@ -10,7 +10,7 @@ from sqlalchemy.orm import mapped_column, Mapped
 from . import DbBaseModel
 
 
-class Image(DbBaseModel):
+class DbImage(DbBaseModel):
     __tablename__ = "images"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -22,4 +22,4 @@ class Image(DbBaseModel):
     tags: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
 
 
-Index("idx_images_tags", Image.tags, postgresql_using="gin")
+Index("idx_images_tags", DbImage.tags, postgresql_using="gin")

@@ -4,4 +4,4 @@ DbBaseModel = declarative_base()
 metadata = DbBaseModel.metadata
 
 # these MUST go below the declarative_base() call
-from .image import Image
+from .image import DbImage

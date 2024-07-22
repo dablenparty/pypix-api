@@ -11,7 +11,7 @@ from tusserver.tus import create_api_router
 
 from api.routers.images import images_router
 from db import sessionmanager
-from db.models import Image
+from db.models import DbImage
 
 # TODO: settings class
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -47,7 +47,7 @@ def tus_naming_function(_: Request, metadata: dict[str, str]) -> str:
         raise ValueError("metadata.filename is required")
     file_name = metadata["filename"]
     with sessionmanager.session() as session:
-        image_id = session.scalars(insert(Image).returning(Image.id), [{"file_name": file_name}]).one()
+        image_id = session.scalars(insert(DbImage).returning(DbImage.id), [{"file_name": file_name}]).one()
         # force commit
         session.commit()
         session.flush()
