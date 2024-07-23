@@ -10,7 +10,7 @@ from tusserver.tus import create_api_router
 
 from api.routers.images import images_router
 from db import sessionmanager
-from tus_utils import tus_naming_function, FILES_DIR
+from tus_utils import tus_naming_function, FILES_DIR, tus_on_upload_complete
 
 # TODO: settings class
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -47,6 +47,7 @@ app.include_router(
         files_dir=FILES_DIR,
         location="http://localhost:8000/images/upload",
         naming_function=tus_naming_function,
+        on_upload_complete=tus_on_upload_complete,
     ),
     prefix="/images/upload",
 )

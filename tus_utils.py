@@ -1,14 +1,15 @@
 ﻿import json
+import logging
 import uuid
 from pathlib import Path
 
+from PIL import Image
 from sqlalchemy import insert
 from starlette.requests import Request
 from tusserver.metadata import FileMetadata as TusFileMetadata
 
 from db import sessionmanager
 from db.models import ImageModel
-
 
 FILES_DIR = "./images"
 
@@ -23,6 +24,10 @@ def tus_naming_function(_: Request, metadata: dict[str, str]) -> str:
         session.commit()
         session.flush()
     return str(image_id)
+
+
+def tus_on_upload_complete(file_path: str, metadata: dict):
+    ...
 
 
 def get_image_path(image_id: str | uuid.UUID) -> Path:
