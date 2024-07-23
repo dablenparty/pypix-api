@@ -64,7 +64,20 @@ class DatabaseSessionManager:
             session.close()
 
 
-sessionmanager = DatabaseSessionManager(SQLALCHEMY_DATABASE_URL)
+def _serializer(obj: Any) -> Any:
+    from exifread.utils import Ratio
+    if isinstance(obj, Ratio):
+        return obj.decimal()
+    raise TypeError(f"Object of type {type(obj)} is not serializable")
+
+
+def _json_serializer(obj: Any) -> str:
+    import json
+    return json.dumps(obj, default=_serializer)
+
+
+sessionmanager = DatabaseSessionManager(SQLALCHEMY_DATABASE_URL,
+                                        {"json_serializer": _json_serializer})
 
 
 def get_db_session():
