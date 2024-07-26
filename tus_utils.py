@@ -1,10 +1,13 @@
 ﻿import json
+import logging
 import uuid
 from pathlib import Path
 from typing import Any
 
 import exifread
-from sqlalchemy import insert, update
+from PIL import Image
+from sentence_transformers import SentenceTransformer
+from sqlalchemy import insert, update, select
 from starlette.requests import Request
 from tusserver.metadata import FileMetadata as TusFileMetadata
 
@@ -37,17 +40,32 @@ def process_exif(file_path: str | Path) -> dict[str, dict[str, Any]]:
     return sanitized_exif
 
 
+def generate_embeddings(file_path: str | Path):
+    model = SentenceTransformer("clip-ViT-B-32")
+    image = Image.open(file_path)
+    embeddings = model.encode(image)
+    return embeddings
+
+
 def tus_on_upload_complete(file_path: str, metadata: dict):
     # TODO: extract a dataclass for exif tags
     # you can probably codegen this with metaprogramming
-    exif_tags = process_exif(file_path)
+    try:
+        exif_tags = process_exif(file_path)
+    except Exception as e:
+        logging.warning(f"Failed to process exif tags: {e}")
+        exif_tags = None
+    try:
+        embeddings = generate_embeddings(file_path)
+    except Exception as e:
+        logging.error(f"Failed to generate embeddings: {e}")
+        embeddings = None
     with sessionmanager.session() as session:
         image_id = str(Path(file_path).stem)
         session.execute(
-            update(ImageModel).where(ImageModel.id == image_id).values(exif_data=exif_tags)
+            update(ImageModel).where(ImageModel.id == image_id).values(exif_data=exif_tags, embeddings=embeddings)
         )
         session.commit()
-        from sqlalchemy import select
         image = session.scalars(select(ImageModel).where(ImageModel.id == image_id)).one()
         print(image)
 
