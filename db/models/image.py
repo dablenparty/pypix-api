@@ -17,9 +17,16 @@ class ImageModel(DbBaseModel):
     file_name: Mapped[str] = mapped_column(String(255))
     exif_data: Mapped[Optional[dict]] = mapped_column(JSONB)
     caption: Mapped[Optional[str]] = mapped_column(Text)
-    embeddings: Mapped[Optional[list]] = mapped_column(Vector(512), index=True)
+    embeddings: Mapped[Optional[list]] = mapped_column(Vector(512))
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     tags: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
 
 
 Index("idx_images_tags", ImageModel.tags, postgresql_using="gin")
+# index embeddings usong vector_cosine_ops
+Index("idx_images_embeddings",
+      ImageModel.embeddings,
+      postgresql_using="ivfflat",
+      postgresql_with={"lists": 100},
+      postgresql_ops={"embeddings": "vector_cosine_ops"}
+      )
