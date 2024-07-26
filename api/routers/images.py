@@ -35,4 +35,11 @@ def get_image_data(image_id: uuid.UUID, db_session: DbSessionDependency):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found in database")
     return image
 
-# TODO: search by embeddings
+
+@images_router.get("/{image_id}/search", response_model=list[ImageModel], status_code=status.HTTP_200_OK)
+def search_images(image_id: uuid.UUID, query: str | None, db_session: DbSessionDependency):
+    # TODO: search by embeddings
+    # when query is None, return all images
+    # otherwise, do a cosine similarity search
+    raise NotImplementedError("Search by embeddings is not implemented yet")
+
