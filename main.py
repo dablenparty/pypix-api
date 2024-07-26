@@ -46,11 +46,11 @@ app.add_middleware(
 app.include_router(
     create_api_router(
         files_dir=FILES_DIR,
-        location="http://localhost:8000/api/v1/images/upload",
+        location="http://localhost:8000/api/v1/tus/upload",
         naming_function=tus_naming_function,
         on_upload_complete=tus_on_upload_complete,
     ),
-    prefix="/api/v1/images/upload",
+    prefix="/api/v1/tus/upload",
 )
 
 app.include_router(images_router)
