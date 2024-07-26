@@ -3,8 +3,9 @@ import sys
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette import status
 from starlette.staticfiles import StaticFiles
 from tusserver.tus import create_api_router
 
@@ -45,19 +46,20 @@ app.add_middleware(
 app.include_router(
     create_api_router(
         files_dir=FILES_DIR,
-        location="http://localhost:8000/images/upload",
+        location="http://localhost:8000/api/v1/images/upload",
         naming_function=tus_naming_function,
         on_upload_complete=tus_on_upload_complete,
     ),
-    prefix="/images/upload",
+    prefix="/api/v1/images/upload",
 )
 
 app.include_router(images_router)
 
 
 @app.get("/")
-def root():
-    return {"message": "Hello World"}
+def root(request: Request):
+    uppy_url = request.url_for("static", path="uppy.html")
+    return Response(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": str(uppy_url)})
 
 
 def main():
