@@ -1,7 +1,13 @@
-python-dotenv~=1.0.1
+ExifRead~=3.0.0
 fastapi~=0.111.1
-pydantic~=2.8.2
-sqlalchemy~=2.0.31
-psycopg2-binary~=2.9.9
+numpy~=1.26.4
 pgvector~=0.3.2
+pillow~=10.4.0
+psycopg2-binary~=2.9.9
+pydantic~=2.8.2
+python-dotenv~=1.0.1
+sqlalchemy~=2.0.31
+starlette~=0.38.1
+sentence-transformers~=3.0.1
 tuspyserver @ git+https://github.com/dablenparty/tuspy-fast-api.git@main
+uvicorn~=0.30.3
