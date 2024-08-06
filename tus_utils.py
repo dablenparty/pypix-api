@@ -2,9 +2,7 @@
 import logging
 import uuid
 from pathlib import Path
-from typing import Any
 
-import exifread
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import insert, update, select
@@ -29,17 +27,6 @@ def tus_naming_function(_: Request, metadata: dict[str, str]) -> str:
     return str(image_id)
 
 
-def process_exif(file_path: str | Path) -> dict[str, dict[str, Any]]:
-    with open(file_path, "rb") as f:
-        exif_tags = exifread.process_file(f, details=False)
-    sanitized_exif = {}
-    for tag, value in exif_tags.items():
-        first, second = tag.split(" ")
-        real_value = value.values
-        sanitized_exif.setdefault(first, {})[second] = real_value
-    return sanitized_exif
-
-
 def generate_embeddings(file_path: str | Path):
     model = SentenceTransformer("clip-ViT-B-32")
     image = Image.open(file_path)
@@ -48,13 +35,6 @@ def generate_embeddings(file_path: str | Path):
 
 
 def tus_on_upload_complete(file_path: str, metadata: dict):
-    # TODO: extract a dataclass for exif tags
-    # you can probably codegen this with metaprogramming
-    try:
-        exif_tags = process_exif(file_path)
-    except Exception as e:
-        logging.warning(f"Failed to process exif tags: {e}")
-        exif_tags = None
     try:
         embeddings = generate_embeddings(file_path)
     except Exception as e:

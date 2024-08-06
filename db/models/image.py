@@ -15,7 +15,6 @@ class ImageModel(DbBaseModel):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4, init=False)
     file_name: Mapped[str] = mapped_column(String(255))
-    exif_data: Mapped[Optional[dict]] = mapped_column(JSONB)
     caption: Mapped[Optional[str]] = mapped_column(Text)
     embeddings: Mapped[Optional[list]] = mapped_column(Vector(512))
     created_at: Mapped[datetime] = mapped_column(default=func.now())
