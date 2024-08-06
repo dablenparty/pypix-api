@@ -1,8 +1,10 @@
 ﻿import uuid
 
-from fastapi import APIRouter, Response, HTTPException
+import exifread
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from starlette import status
+from starlette.responses import FileResponse
 
 from db import DbSessionDependency
 from db.models import ImageModel
@@ -15,7 +17,13 @@ images_router = APIRouter(
 )
 
 
-@images_router.get("/{image_id}", response_class=Response, status_code=status.HTTP_200_OK)
+@images_router.get("/", response_model=list[ImageModel], status_code=status.HTTP_200_OK)
+def get_images(db_session: DbSessionDependency):
+    images = db_session.scalars(select(ImageModel)).all()
+    return images
+
+
+@images_router.get("/{image_id}", response_class=FileResponse, status_code=status.HTTP_200_OK)
 def get_image(image_id: uuid.UUID):
     try:
         metadata = get_image_metadata(image_id)
@@ -23,9 +31,22 @@ def get_image(image_id: uuid.UUID):
     except FileNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     image_path = get_image_path(image_id)
-    with image_path.open("rb") as f:
-        image_bytes = f.read()
-    return Response(content=image_bytes, media_type=media_type)
+    return FileResponse(image_path, media_type=media_type)
+
+
+@images_router.get("/{image_id}/exif", response_model=dict, status_code=status.HTTP_200_OK)
+def get_image_exif(image_id: uuid.UUID):
+    file_path = get_image_path(image_id)
+    with open(file_path, "rb") as f:
+        # per docs: expects an open file object
+        # details=False to avoid loading the entire file
+        exif_tags = exifread.process_file(f, details=False)
+    structured_exif = {}
+    for tag, value in exif_tags.items():
+        first, second = tag.split(" ")
+        real_value = value.values
+        structured_exif.setdefault(first, {})[second] = real_value
+    return structured_exif
 
 
 @images_router.get("/{image_id}/data", response_model=ImageModel, status_code=status.HTTP_200_OK)
@@ -42,4 +63,3 @@ def search_images(image_id: uuid.UUID, query: str | None, db_session: DbSessionD
     # when query is None, return all images
     # otherwise, do a cosine similarity search
     raise NotImplementedError("Search by embeddings is not implemented yet")
-
