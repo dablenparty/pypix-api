@@ -39,9 +39,9 @@ def tus_on_upload_complete(file_path: str, metadata: dict):
         session.commit()
 
 
-def get_image_path(image_id: str | uuid.UUID) -> Path:
+def get_image_path(image_id: str | uuid.UUID):
     raise NotImplementedError("This function is not implemented yet.")
 
 
-def get_image_metadata(image_id: str | uuid.UUID) -> TusFileMetadata:
+def get_image_metadata(image_id: str | uuid.UUID):
     raise NotImplementedError("This function is not implemented yet.")

@@ -1,0 +1,236 @@
+#####################################################################
+# Application Information
+#
+#   Description:
+#       Gives you the ability to configure specific attributes of
+#       your application.
+#####################################################################
+
+APP_NAME="FasTUS Demo"
+APP_VERSION="0.0.002"
+APP_SUMMARY="This is a FasTUS Demo Server"
+APP_DESCRIPTION="FasTUS is a TUS-Compliant Resumable Upload Server using FastAPI."
+APP_AUTHOR="Jordan Michaels"
+APP_AUTHOR_URL="https://utdream.org/"
+APP_AUTHOR_EMAIL="fastus@utdream.anonaddy.com"
+APP_LIC_NAME="Unlicense / Public Domain"
+APP_LIC_IDENT="Unlicense"
+APP_LIC_URL="https://opensource.org/license/unlicense/"
+
+#####################################################################
+# Directory Configuration
+#
+#   Description:
+#       This area allows you to configure specific directories on
+#       your system for use with your FasTUS upload server. Folders
+#       defined here should not include the trailing slash. This is
+#       so that any appended files or directories can start with the
+#       "/" character making paths easier to read in the code.
+#
+#   DIR_HOME
+#       The home directory of your FasTUS installation. Suggested
+#       location on Linux is /opt/your_app or /opt/fastus
+#   DIR_MEDIA
+#       The location of your completed uploads. Intended to be an
+#       offline (not available over the network) directory.
+#   DIR_WORK
+#       The temporary location where uploads are assembled by the
+#       server. Used to store upload chunks and file metadata. Should
+#       be an offline (not available to the network) directory.
+#####################################################################
+
+DIR_HOME="/home/fastus"
+DIR_MEDIA="${DIR_HOME}/media"
+DIR_WORK="${DIR_HOME}/work"
+
+#####################################################################
+# TUS Configuration
+#
+#   Description:
+#       TUS is the protocol that is used by the file upload process
+#       in order to support resumable file uploads. These parameters
+#       allow you to control the details of how your resumable file
+#       uploads are handled on your system.
+#
+#   TUS_VERSION
+#       The version of TUS that this server supports. As of now,
+#       there is only one production-ready version of TUS which is
+#       "1.0.0".
+#       Docs:
+#       https://tus.io/protocols/resumable-upload
+#   TUS_EXPIRE
+#       Number of minutes that the server will wait for additional
+#       data from the client before considering an upload abandoned.
+#       Several days is considered normal, but large file uploads can
+#       take up a considerable amount of space, so this value should
+#       be tailored for your use-case. To calculate days, use this
+#       formula: 60 * 24 * [number of days]
+#           1440 = 1 day
+#           2880 = 2 days
+#           7200 = 5 days
+#           20160 = 2 weeks
+#   TUS_API_PREFIX
+#       This is the endpoint that you'll use to hit your TUS server
+#       through a FastAPI Router. For example, the default prefix is
+#       "/tus/1/", which means your local API endpoint would be:
+#       http://127.0.0.1:8000/tus/1/
+#       From there, you would use the various HTTP methods (GET,
+#       POST, PATCH, etc) to run your supported TUS extensions.
+#   TUS_UPLOAD_PREFIX
+#       The upload prefix makes it so that all file upload chunks
+#       have a specific prefix to their UUID file name. This makes it
+#       easy for a human to identify the files that are parts of
+#       files being uploaded to the server or something else. An
+#       example file upload chunk might be:
+#       upload_HexUuidValue.part.1
+#       In this case, "upload_" would be the prefix, ".part" would be
+#       the suffix, and ".1" would be the chunk number. If you are
+#       not sure or don't care, just leave this default.
+#   TUS_MAX_FILE_SIZE
+#       The maximum file size in bytes that a single, fully uploaded
+#       file is allowed to have on the server. For example, you want
+#       fully uploaded files to not be larger than 50GB, then set
+#       this value here. You can calculate the number of bytes using
+#       a formula like this:
+#           1024 * 1024 * 1024 * 50 = 50GB (53687091200)
+#   TUS_MAX_REQ_SIZE
+#       The maximum size in bytes that a POST or PATCH request can
+#       send without being rejected. It is HIGHLY recommended that
+#       you configure NGINX (or whatever web server you put in front
+#       of FasTUS in production) to match this setting rather than
+#       letitng FasTUS handle this setting directly. This setting
+#       is communicated with clients outside the TUS protocol using
+#       the standard "Content-Length" header included in the TUS HEAD
+#       request. This value should include a little extra to allow
+#       both the size of the binary data as well as the HTTP headers.
+#       For example:
+#           1024*1024*10 = 10485760 = 10MB (max binary data)
+#           1024*40 = 40960 = 40KB (max HTTP header size)
+#       Add these together to get the TUS_MAX_REQ_SIZE:
+#           10485760 + 40960 = 10526720
+#   TUS_FILE_SORT_POLICY
+#       A boolean value that tells the FasTUS TUS server to sort
+#       uploaded files into the media directory based on their parent
+#       mime type. For example, if a file's mime type is found to be
+#       "video/mp4", FasTUS will store it in the DIR_MEDIA folder
+#       in the "video" subfolder. Or, if a file's mime type is found
+#       to be "image/png", FasTUS will store the file in the "image"
+#       subfolder. FasTUS will attempt to create directories for
+#       mime type parents if they don't exist. If this option is
+#       FALSE files will simply be left in the work directory when
+#       they're completed and you can do whatever you want with them.
+#   TUS_FILE_MATCH_POLICY
+#       This option tells FasTUS what to do when a file is uploaded
+#       that matches the name of an existing file on the server. By
+#       default the policy will be "RENAME", which tells FasTUS to
+#       generate a random string to add to the name of the new file.
+#       Alternatively, you may change the policy to "REPLACE" to have
+#       FasTUS replace the existing file with the new file if that
+#       makes more sense for your use-case.
+#####################################################################
+
+TUS_VERSION="1.0.0"
+TUS_EXPIRE=2880                         # 2 days
+TUS_API_PREFIX="/tus/1"
+TUS_UPLOAD_PREFIX="upload_"
+TUS_MAX_FILE_SIZE=53687091200           # 50GB
+TUS_MAX_REQ_SIZE=10526720               # 10MB + headers
+TUS_FILE_SORT_POLICY=True               # Boolean
+TUS_FILE_MATCH_POLICY=RENAME            # "RENAME" or "REPLACE"
+
+#####################################################################
+# CORS
+#
+#   Description:
+#       Control what requests are allowed access to your API.
+#
+#   CORS_ORIGINS
+#       An "origin" is a specific URL that is allowed to access your
+#       API. It can be an IP or a Domain name - depending on what you
+#       use to access your API.
+#       Examples:
+#       CORS_ORIGINS=["*"]
+#       CORS_ORIGINS=["My-Domain.com", "localhost:8000", "127.0.0.1"]
+#   CORS_METHODS
+#       Allows you to configure only the specific request methods you
+#       want available to the outside world.
+#       Examples:
+#       CORS_METHODS=["*"]
+#       CORS_METHODS=["GET, PUT, POST, DELETE"]
+#   CORS_HEADERS
+#       A list of HTTP request headers that should be supported for
+#       cross-origin requests.
+#       Examples:
+#       CORS_HEADERS=["*"]
+#       CORS_HEADERS=["X-Custom-Header"]
+#   CORS_CREDENTIALS
+#       Allows you to specify if the API should accept cookies.
+#       Default is False.
+#
+#   Docs:
+#   https://fastapi.tiangolo.com/tutorial/cors/
+#   https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+#####################################################################
+
+CORS_ORIGINS=["*"]      # allow all origins (ONLY FOR TESTING!)
+#CORS_ORIGINS=["my_example_domain.com", "localhost:8000"]
+CORS_METHODS=["*"]      # GET, POST, PUT, etc.
+CORS_HEADERS=["*"]      # X-Custom-Header, etc.
+CORS_CREDENTIALS=True   # Boolean
+
+#####################################################################
+# System Log Configuration
+#
+#   Description:
+#       Configure logging for your API.
+#
+#   LOG_NAME
+#       Name of the log file. The '.log' file extention will be
+#       appended to this name.
+#   LOG_DIR
+#       Directory where log files are stored
+#   LOG_DAYS
+#       Number of days old logs are retained. Log files older than
+#       The number of days will be deleted.
+#   LOG_LEVEL
+#       Highest level of log messages to retain. Possible values are:
+#       DEBUG, INFO, WARNING, ERROR, CRITICAL
+#   LOG_SIZE
+#       Max log file size in bytes (ie: 1046576 = 1MB). If a log file
+#       exceeds this number of bytes it will be renamed numerically
+#       and a new log file with the base name will be created. That
+#       way, the log file with the base name will always contain the
+#       latest logs.
+#
+#   Docs:
+#   https://docs.python.org/3/howto/logging.html
+#####################################################################
+
+LOG_NAME="fastus-server"
+LOG_DIR="${DIR_HOME}/logs/"
+LOG_FORMAT="[%(levelname)4.4s %(asctime)s %(module)s:%(lineno)d] %(message)s"
+LOG_DAYS=10
+LOG_LEVEL="DEBUG"
+LOG_SIZE=10465760           # 10MB
+
+#####################################################################
+# Sqlite Configuration
+#
+#   Description:
+#       Configure your SQLite database location.
+#   
+#   DB_SQLITE_URL
+#       The location of your SQLite DB. Default value will place the
+#       DB in the root folder of your application. A blank value here
+#       will also result in the default value being used.
+#       Examples:
+#       sqlite:///fastus.db  # Puts the DB file in the app root dir
+#       sqlite://            # Uses an in-memory only DB
+#   
+#   Docs:
+#   https://docs.sqlalchemy.org/en/20/core/engines.html
+#   https://www.sqlite.org/docs.html
+#####################################################################
+
+DB_SQLITE_URL="sqlite:///fastus.db"      # name/location of DB file
+# DB_SQLITE_URL="sqlite://"              # in memory sqlite url
