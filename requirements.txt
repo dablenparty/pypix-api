@@ -1,5 +1,5 @@
 ExifRead~=3.0.0
-fastapi~=0.111.1
+fastapi~=0.112.0
 numpy~=1.26.4
 pgvector~=0.3.2
 pillow~=10.4.0
@@ -8,6 +8,6 @@ pydantic~=2.8.2
 python-dotenv~=1.0.1
 sqlalchemy~=2.0.31
 sqlmodel~=0.0.21
-starlette~=0.38.1
+starlette~=0.37.2
 sentence-transformers~=3.0.1
 uvicorn~=0.30.3
