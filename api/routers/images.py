@@ -2,12 +2,12 @@
 
 import exifread
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select
+from sqlmodel import select
 from starlette import status
 from starlette.responses import FileResponse
 
 from db import DbSessionDependency
-from db.models import ImageModel
+from db.models.image import Image as ImageModel
 from tus_utils import get_image_path, get_image_metadata
 
 images_router = APIRouter(
@@ -18,8 +18,8 @@ images_router = APIRouter(
 
 
 @images_router.get("/", response_model=list[ImageModel], status_code=status.HTTP_200_OK)
-def get_images(db_session: DbSessionDependency):
-    images = db_session.scalars(select(ImageModel)).all()
+def get_images(*, db_session: DbSessionDependency):
+    images = db_session.exec(select(ImageModel)).all()
     return images
 
 

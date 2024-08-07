@@ -5,10 +5,8 @@ from typing import Any, Annotated
 
 from dotenv import load_dotenv, find_dotenv
 from fastapi import Depends
-from sqlalchemy import create_engine, Connection
-from sqlalchemy.orm import sessionmaker, Session
-
-from .models import DbBaseModel
+from sqlalchemy import Connection
+from sqlmodel import create_engine, Session, SQLModel
 
 load_dotenv(find_dotenv())
 
@@ -21,21 +19,19 @@ class DatabaseSessionManager:
         if engine_kwargs is None:
             engine_kwargs = dict()
         self._engine = create_engine(host, **engine_kwargs)
-        self._sessionmaker = sessionmaker(autocommit=False, bind=self._engine)
 
     def init(self):
         if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
         with self._engine.begin() as connection:
-            DbBaseModel.metadata.create_all(connection)
+            SQLModel.metadata.create_all(connection)
 
     def close(self):
         if self._engine is None:
-            raise Exception("DatabaseSessionManager is not initialized")
+            return
         self._engine.dispose()
 
         self._engine = None
-        self._sessionmaker = None
 
     @contextlib.contextmanager
     def connect(self) -> Iterator[Connection]:
@@ -51,10 +47,10 @@ class DatabaseSessionManager:
 
     @contextlib.contextmanager
     def session(self) -> Iterator[Session]:
-        if self._sessionmaker is None:
+        if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
 
-        session = self._sessionmaker()
+        session = Session(self._engine)
         try:
             yield session
         except Exception:

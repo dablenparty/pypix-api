@@ -3,14 +3,14 @@ import logging
 import uuid
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image as PILImage
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import insert, update, select
 from starlette.requests import Request
 from tusserver.metadata import FileMetadata as TusFileMetadata
 
 from db import sessionmanager
-from db.models import ImageModel
+from db.models.image import Image as ImageModel
 
 FILES_DIR = "./images"
 
@@ -29,7 +29,7 @@ def tus_naming_function(_: Request, metadata: dict[str, str]) -> str:
 
 def generate_embeddings(file_path: str | Path):
     model = SentenceTransformer("clip-ViT-B-32")
-    image = Image.open(file_path)
+    image = PILImage.open(file_path)
     embeddings = model.encode(image)
     return embeddings
 
