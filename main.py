@@ -7,11 +7,9 @@ from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from starlette.staticfiles import StaticFiles
-from tusserver.tus import create_api_router
 
 from api.routers.images import images_router
 from db import sessionmanager
-from tus_utils import tus_naming_function, FILES_DIR, tus_on_upload_complete
 
 # TODO: settings class
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -24,9 +22,7 @@ async def lifespan(app: FastAPI):
     To understand more, read https://fastapi.tiangolo.com/advanced/events/
     """
     yield
-    if sessionmanager._engine is not None:
-        # Close the DB connection
-        sessionmanager.close()
+    sessionmanager.close()
 
 
 app = FastAPI(lifespan=lifespan, title="pypix", docs_url="/api/docs")
@@ -42,15 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TODO: on_upload_complete handler for AI processing
-app.include_router(
-    create_api_router(
-        files_dir=FILES_DIR,
-        location="http://127.0.0.1:8000/api/v1/tus/upload",
-        on_upload_complete=tus_on_upload_complete,
-    ),
-    prefix="/api/v1/tus/upload",
-)
+# TODO: custom TUS implementation based on or modified from FasTUS: https://gitea.com/utdream/FasTUS
 
 app.include_router(images_router)
 

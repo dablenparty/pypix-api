@@ -25,13 +25,7 @@ def get_images(*, db_session: DbSessionDependency):
 
 @images_router.get("/{image_id}", response_class=FileResponse, status_code=status.HTTP_200_OK)
 def get_image(image_id: uuid.UUID):
-    try:
-        metadata = get_image_metadata(image_id)
-        media_type = metadata.metadata.get("filetype", "image/jpeg")
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    image_path = get_image_path(image_id)
-    return FileResponse(image_path, media_type=media_type)
+    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
 
 
 @images_router.get("/{image_id}/exif", response_model=dict, status_code=status.HTTP_200_OK)
@@ -62,4 +56,4 @@ def search_images(image_id: uuid.UUID, query: str | None, db_session: DbSessionD
     # TODO: search by embeddings
     # when query is None, return all images
     # otherwise, do a cosine similarity search
-    raise NotImplementedError("Search by embeddings is not implemented yet")
+    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
